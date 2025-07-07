@@ -1,0 +1,137 @@
+package ui;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+
+public class XandO  {
+    JFrame frame = new JFrame("Tic Tac Toe - Smart AI");
+    JPanel panel = new JPanel(new GridLayout(3, 3));
+    JButton[] buttons = new JButton[9];
+    JLabel statusLabel = new JLabel("Player 1's Turn (X)");
+    JLabel scoreLabel = new JLabel("Score - Player 1: 0 | Player 2: 0");
+    JCheckBox aiToggle = new JCheckBox("Enable AI for Player 2");
+    JButton restartButton = new JButton("Restart");
+
+    int[] board = new int[9]; // 0 = empty, 1 = player 1, 2 = player 2 (or AI)
+    int player1Score = 0;
+    int player2Score = 0;
+    boolean playerOneTurn = true;
+
+    public XandO() {
+        initializeUI();
+    }
+
+    private void initializeUI() {
+        frame.setLayout(new BorderLayout());
+
+        // Top panel for status and score
+        JPanel topPanel = new JPanel(new GridLayout(2, 1));
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        topPanel.add(statusLabel);
+        topPanel.add(scoreLabel);
+        frame.add(topPanel, BorderLayout.NORTH);
+
+        // Game board
+        for (int i = 0; i < 9; i++) {
+            buttons[i] = new JButton();
+            buttons[i].setFont(new Font("Arial", Font.BOLD, 36));
+            int index = i;
+            buttons[i].addActionListener(e -> handleMove(index));
+            panel.add(buttons[i]);
+        }
+        frame.add(panel, BorderLayout.CENTER);
+
+        // Bottom panel for controls
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(aiToggle);
+        bottomPanel.add(restartButton);
+        restartButton.addActionListener(e -> resetBoard());
+        frame.add(bottomPanel, BorderLayout.SOUTH);
+
+        frame.setSize(400, 450);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+
+    private void handleMove(int index) {
+        if (board[index] != 0) return;
+
+        board[index] = playerOneTurn ? 1 : 2;
+        buttons[index].setText(playerOneTurn ? "X" : "O");
+        buttons[index].setEnabled(false);
+
+        int winner = checkWinner();
+        if (winner != 0) {
+            showWinner(winner);
+            return;
+        } else if (isDraw()) {
+            statusLabel.setText("It's a draw!");
+            disableAllButtons();
+            return;
+        }
+
+        playerOneTurn = !playerOneTurn;
+        updateStatusLabel();
+
+        // AI Move if enabled and it's Player 2's turn
+        if (aiToggle.isSelected() && !playerOneTurn) {
+            int bestMove = getBestMove();
+            handleMove(bestMove);
+        }
+    }
+
+    private void updateStatusLabel() {
+        if (playerOneTurn) {
+            statusLabel.setText("Player 1's Turn (X)");
+        } else {
+            statusLabel.setText(aiToggle.isSelected() ? "AI's Turn (O)" : "Player 2's Turn (O)");
+        }
+    }
+
+    private void showWinner(int winner) {
+        if (winner == 1) {
+            player1Score++;
+            JOptionPane.showMessageDialog(frame, "Player 1 Wins!");
+        } else {
+            player2Score++;
+            JOptionPane.showMessageDialog(frame, aiToggle.isSelected() ? "AI Wins!" : "Player 2 Wins!");
+        }
+        updateScoreLabel();
+        disableAllButtons();
+    }
+
+    private void updateScoreLabel() {
+        scoreLabel.setText("Score - Player 1: " + player1Score + " | Player 2: " + player2Score);
+    }
+
+    private void disableAllButtons() {
+        for (JButton btn : buttons) {
+            btn.setEnabled(false);
+        }
+    }
+
+    private void resetBoard() {
+        Arrays.fill(board, 0);
+        for (JButton btn : buttons) {
+            btn.setText("");
+            btn.setEnabled(true);
+        }
+        playerOneTurn = true;
+        statusLabel.setText("Player 1's Turn (X)");
+    }
+
+    private int checkWinner() {
+        int[][] winConditions = {
+                {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
+                {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
+                {0, 4, 8}, {2, 4, 6}
+        };
+        for (int[] wc : winConditions) {
+            if (board[wc[0]] != 0 && board[wc[0]] == board[wc[1]] && board[wc[1]] == board[wc[2]]) {
+                return board[wc[0]];
+            }
+        }
+        return 0;
+    }
