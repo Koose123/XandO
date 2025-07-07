@@ -135,3 +135,62 @@ public class XandO  {
         }
         return 0;
     }
+
+   private boolean isDraw() {
+        for (int value : board) {
+            if (value == 0) return false;
+        }
+        return true;
+    }
+
+    // Minimax algorithm for smart AI
+    private int getBestMove() {
+        int bestScore = Integer.MIN_VALUE;
+        int move = -1;
+        for (int i = 0; i < 9; i++) {
+            if (board[i] == 0) {
+                board[i] = 2; // AI move
+                int score = minimax(board, 0, false);
+                board[i] = 0;
+                if (score > bestScore) {
+                    bestScore = score;
+                    move = i;
+                }
+            }
+        }
+        return move;
+    }
+
+    private int minimax(int[] boardState, int depth, boolean isMaximizing) {
+        int result = checkWinner();
+        if (result == 1) return -10 + depth;
+        if (result == 2) return 10 - depth;
+        if (isDraw()) return 0;
+
+        if (isMaximizing) {
+            int best = Integer.MIN_VALUE;
+            for (int i = 0; i < 9; i++) {
+                if (boardState[i] == 0) {
+                    boardState[i] = 2;
+                    best = Math.max(best, minimax(boardState, depth + 1, false));
+                    boardState[i] = 0;
+                }
+            }
+            return best;
+        } else {
+            int best = Integer.MAX_VALUE;
+            for (int i = 0; i < 9; i++) {
+                if (boardState[i] == 0) {
+                    boardState[i] = 1;
+                    best = Math.min(best, minimax(boardState, depth + 1, true));
+                    boardState[i] = 0;
+                }
+            }
+            return best;
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(XandO::new);
+    }
+}
